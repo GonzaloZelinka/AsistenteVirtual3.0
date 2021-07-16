@@ -1,15 +1,13 @@
 
 from selenium import webdriver
-import time 
 import pyttsx3
 from pyttsx3.drivers import sapi5
 from googlesearch import search
 import webbrowser
-import datetime
+from datetime import datetime
 import recordatoriosAvisos
 
 browser = webdriver
-validarBusquedaG = False
 crearRecordatorio = False
 crearTextoRecordatorio= False
 crearAviso = False
@@ -17,109 +15,106 @@ crearAvisoTexto = False
 crearHoraParaRecordarRecord = False
 textoTemas = False
 textoImportante = False
-now = datetime.datetime.now()
+now = datetime.now()
 fechaParaRecordar = ""
 horaParaRecordarRecord = ""
 horaParaRecordar = ""
-MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "noviembre", "diciembre"]
-
-
+MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
+#if (('gracias verónica' or 'gracia verónica' or 'gracia veronica' or 'gracias veronica' or 'gracias vero' or    'gracia vero' or 'gracias')).lower()  in texto
 #MODULO DE TODOS LOS COMANDOS
-def acciones(texto: str): 
-    if texto.__contains__("espera"):
-        if texto.__contains__("minuto"):
-            hablar("Ok. Esperando 1 minuto")
-            time.sleep(60)
-        elif texto.__contains__("minutos"):
-            texto = texto.replace("espera", "")
-            texto = texto.replace("minutos", "")
-            hablar("Ok. Esperando "+ texto + "minutos")
-            tiempo = int(texto)
-            tiempo = tiempo * 60
-            time.sleep(tiempo)
+def acciones(texto: str): #buscar en google busca en google busca google buscar google 
+    if('buscar en google' or 'buscar en el navegador' or 'busca en google' or 'busca en navegador' or 'busca google' or 'busca navegador' or 'buscar google' or 'buscar navegador') in texto:
+        palabras = texto.split()
+        contadorPalabras = len(palabras)
+        if (contadorPalabras > 3):
+            texto = texto.replace("buscar en google", "")
+            resultadosBusquedaG = search(texto , tld="com", lang="es", num=5,start=0, stop=5, pause=3.0 )
+            hablar("Ok, abriendo 5 paginas")
+            for r in resultadosBusquedaG: 
+                if (r == 1): 
+                    webbrowser.open(r, new=1)
+                else:
+                    webbrowser.open_new_tab(r)
         else:
-            hablar("Ok. Esperando por defecto 1 minuto")
-            time.sleep(60)
-
-    elif((texto.__contains__("buscar en")) or (texto.__contains__("busca en"))):
-        if ((texto.__contains__("google")) or (texto.__contains__("navegador"))):
-            palabras = texto.split()
-            contadorPalabras = len(palabras)
-            if (contadorPalabras > 3):
-                global validarBusquedaG 
-                validarBusquedaG = True
-                texto = texto.replace("buscar en google", "")
-                global resultadosBusquedaG
-                resultadosBusquedaG = search(texto , tld="com", lang="es", num=5,start=0, stop=5, pause=3.0 )
-                hablar("He encontrado estas 5 páginas para ti, ¿Quieres que las abra?. Contesta con un: abrir páginas")
-            else: 
-                validarBusquedaG = False
-                hablar("No me haz dicho que quieres que busque. Repítelo, por favor")
-        return
-    
-    elif (texto.__contains__("abrir")):
-        if (validarBusquedaG == True):
-            if((texto.__contains__("paginas")) or (texto.__contains__("páginas")) or (texto.__contains__("página")) or (texto.__contains__("pagina")) or (texto.__contains__("sitios"))or (texto.__contains__("sitio"))or (texto.__contains__("sitios"))or (texto.__contains__("dominio"))or (texto.__contains__("dominios"))):
-                for r in resultadosBusquedaG:
-                    if (r == 1): 
-                        webbrowser.open(r, new=1) 
-                    else:
-                        webbrowser.open_new_tab(r)
-        else: 
-            hablar("Primero tienes que decirme qué quieres buscar en el navegador")            
+            hablar("No me haz dicho que quieres que busque. Repítelo, por favor")
         return
 
-    elif(texto.__contains__("crear")): 
-        if(texto.__contains__("recordatorio")):
-            hablar("Ok. Dime en que fecha quieres crear el recordatorio")
-            global crearRecordatorio
-            crearRecordatorio = True
-        if(texto.__contains__("aviso")):
-            hablar("Ok. Dime dentro de cuanto quieres que lo avise")
-            global crearAviso 
-            crearAviso = True
+    elif ('crear recordatorio' or 'recordatorio' or 'nuevo recordatorio' or 'crea recordatorio' or 'recordame') in texto: 
+        hablar("Ok. Dime en que fecha quieres crear el recordatorio")
+        global crearRecordatorio
+        crearRecordatorio = True
         return
 
     elif(crearRecordatorio == True):
-        hoy = datetime.date.today() 
+        hoy = datetime.today() 
         try:
-            if (texto.__contains__("hoy")):
+            print('texto:', texto)
+            if 'hoy' in texto:
                 hablar(hoy)
                 global fechaParaRecordar
                 fechaParaRecordar = hoy.strftime('%Y-%m-%d')
             else: 
-                dia = -1 
-                mes = -1 
-                fecha = texto
-                fecha = fecha.replace("de", "")
-                fecha = fecha.replace("del", "")
-                if (fecha.__contains__("2020")):
-                    año = 2020
-                elif (fecha.__contains__("2021")):
-                    año = 2021
-                elif (fecha.__contains__("2022")):
-                    año = 2022
-                elif (fecha.__contains__("2023")): 
-                    año = 2023
-                else:
-                    if (fecha.__contains__("2024")):
-                        año = 2024
-                for palabra in fecha.split():  
+                lista_fecha = texto.split()
+                for palabra in lista_fecha: 
                     if palabra in MESES:
-                        mes = MESES.index(palabra) +1 
-                    else:
-                        if palabra.isdigit():
-                            diaOaño = int(palabra)
-                            if diaOaño< 2000:
-                                dia= int(palabra)
-                fecha =datetime.date(month=mes, day=dia, year=año)
-                hablar(fecha)
-                fechaParaRecordar = fecha.strftime('%Y-%m-%d')
+                        texto = texto.replace(palabra, str(MESES.index(palabra) + 1))
+                lista_fecha = texto.split()
+                lista_fecha[1] = 'del'
+                lista_fecha[3] = 'del'
+
+                fechastr=','.join(lista_fecha)
+                fechastr= fechastr.replace(',', ' ')
+                fechaParaRecordar = datetime.strptime(fechastr, '%d del %m del %Y')
+                fechaParaRecordar = fechaParaRecordar.strftime('%Y-%m-%d')
+                hablar(fechaParaRecordar)
+                print('fecha para recordar:',fechaParaRecordar)
+                #print('Entro 0')
+                ## 25 de mayo del 2021, 25 del mayo de 2021, 25 de mayo de 2021, 25 del #mayo del 2021
+                ## 25 del 04 del 2021... 
+                #if MESES in texto:  
+                #    print('Entro 1')
+                #    fecha = datetime.strptime(texto, '%d del %B de %Y')
+                #    fechaParaRecordar = fecha.strftime('%Y-%m-%d')
+                #    print(fechaParaRecordar)
+                #    hablar(fechaParaRecordar)
+                #    #dia = -1 
+                #    #mes = -1 
+                #    #fecha = texto
+                #    #fecha = fecha.replace("de", "")
+                #    #fecha = fecha.replace("del", "")
+                #    #if '2021' in fecha:
+                #    #    año = 2021
+                #    #elif '2022' in fecha:
+                #    #    año = 2022
+                #    #elif '2023' in fecha:
+                #    #    año = 2023
+                #    #elif '2024' in fecha:
+                #    #    año = 2024
+                #    #else:
+                #    #    if '2025' in fecha:
+                #    #        año = 2025
+                #    #for palabra in fecha.split():  
+                #    #    if palabra in MESES:
+                #    #        mes = MESES.index(palabra) +1 
+                #    #    else:
+                #    #        if palabra.isdigit():
+                #    #            diaOaño = int(palabra)
+                #    #            if diaOaño< 2000:
+                #    #                dia= int(palabra)
+                #    #fecha =datetime.date(month=mes, day=dia, year=año)
+                #    #hablar(fecha)
+                #    #fechaParaRecordar = fecha.strftime('%Y-%m-%d')
+                #else: 
+                #    print('Entro 2')
+                #    fecha= datetime.strptime(texto, '%d del %m del %Y')
+                #    fechaParaRecordar = fecha.strftime('%Y-%m-%d')
+                #    print(fechaParaRecordar)
+                #    hablar(fechaParaRecordar)
+                
             global crearTextoRecordatorio
             crearTextoRecordatorio = True
             crearRecordatorio = False
             hablar("Ok, ¿Qué quieres que te recuerde?")
-            
         except: 
             hablar("Ingresaste una fecha que no es válida")
             crearRecordatorio = False
@@ -132,42 +127,6 @@ def acciones(texto: str):
         fechaParaRecordar = ""
         crearTextoRecordatorio = False
 
-
-    elif (crearAviso == True):
-        try:
-            hora = 0
-            minutos = 0
-            prueba = texto 
-            prueba = prueba.replace("dentro", "")
-            prueba = prueba.replace("de", "")
-            for palabra in prueba.split():
-                    if palabra.isdigit():
-                        MinOhora= int(palabra)
-            if (prueba.__contains__("minutos")):
-                minutos = MinOhora
-            else: 
-                if ((prueba.__contains__("horas")) or (prueba.__contains__("hora"))):
-                    hora = MinOhora
-            #COMPROBAR FUNCIONAMIENTO:
-            horaDate = datetime.time(hora, minutos)
-            print(horaDate)
-            global horaParaRecordar
-            horaParaRecordar = horaDate.strftime('%H:%M')
-            #HASTA ACA NOSE SI ANDA
-            hablar("Dime que quieres que te avise")
-            global crearAvisoTexto 
-            crearAvisoTexto = True
-            crearAviso = False
-        except:
-            print(horaParaRecordar)
-            hablar("Ingresaste una hora inválida, vuelve a intentarlo")
-        return
-    else: 
-        if (crearAvisoTexto == True):
-            hablar("Ok. Aviso creado")
-            recordatoriosAvisos.creacionAviso(horaParaRecordar, texto)
-            crearAvisoTexto = False
-        
     
 
 
