@@ -20,9 +20,9 @@ fechaParaRecordar = ""
 horaParaRecordarRecord = ""
 horaParaRecordar = ""
 MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
-#if (('gracias verónica' or 'gracia verónica' or 'gracia veronica' or 'gracias veronica' or 'gracias vero' or    'gracia vero' or 'gracias')).lower()  in texto
+
 #MODULO DE TODOS LOS COMANDOS
-def acciones(texto: str): #buscar en google busca en google busca google buscar google 
+def acciones(texto: str): 
     if('buscar en google' or 'buscar en el navegador' or 'busca en google' or 'busca en navegador' or 'busca google' or 'busca navegador' or 'buscar google' or 'buscar navegador') in texto:
         palabras = texto.split()
         contadorPalabras = len(palabras)
@@ -67,50 +67,7 @@ def acciones(texto: str): #buscar en google busca en google busca google buscar 
                 fechaParaRecordar = datetime.strptime(fechastr, '%d del %m del %Y')
                 fechaParaRecordar = fechaParaRecordar.strftime('%Y-%m-%d')
                 hablar(fechaParaRecordar)
-                print('fecha para recordar:',fechaParaRecordar)
-                #print('Entro 0')
-                ## 25 de mayo del 2021, 25 del mayo de 2021, 25 de mayo de 2021, 25 del #mayo del 2021
-                ## 25 del 04 del 2021... 
-                #if MESES in texto:  
-                #    print('Entro 1')
-                #    fecha = datetime.strptime(texto, '%d del %B de %Y')
-                #    fechaParaRecordar = fecha.strftime('%Y-%m-%d')
-                #    print(fechaParaRecordar)
-                #    hablar(fechaParaRecordar)
-                #    #dia = -1 
-                #    #mes = -1 
-                #    #fecha = texto
-                #    #fecha = fecha.replace("de", "")
-                #    #fecha = fecha.replace("del", "")
-                #    #if '2021' in fecha:
-                #    #    año = 2021
-                #    #elif '2022' in fecha:
-                #    #    año = 2022
-                #    #elif '2023' in fecha:
-                #    #    año = 2023
-                #    #elif '2024' in fecha:
-                #    #    año = 2024
-                #    #else:
-                #    #    if '2025' in fecha:
-                #    #        año = 2025
-                #    #for palabra in fecha.split():  
-                #    #    if palabra in MESES:
-                #    #        mes = MESES.index(palabra) +1 
-                #    #    else:
-                #    #        if palabra.isdigit():
-                #    #            diaOaño = int(palabra)
-                #    #            if diaOaño< 2000:
-                #    #                dia= int(palabra)
-                #    #fecha =datetime.date(month=mes, day=dia, year=año)
-                #    #hablar(fecha)
-                #    #fechaParaRecordar = fecha.strftime('%Y-%m-%d')
-                #else: 
-                #    print('Entro 2')
-                #    fecha= datetime.strptime(texto, '%d del %m del %Y')
-                #    fechaParaRecordar = fecha.strftime('%Y-%m-%d')
-                #    print(fechaParaRecordar)
-                #    hablar(fechaParaRecordar)
-                
+                print('fecha para recordar:',fechaParaRecordar)             
             global crearTextoRecordatorio
             crearTextoRecordatorio = True
             crearRecordatorio = False
