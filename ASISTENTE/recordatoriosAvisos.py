@@ -1,6 +1,6 @@
 
+import re
 import time
-import datetime
 from datetime import timedelta, datetime
 import requests
 from pymongo import MongoClient
@@ -14,8 +14,6 @@ db=client.admin
 
 miDataBase = client.test
 miColeccionRecordatorios = miDataBase.recordatorios
-miColeccionAvisos = miDataBase.avisos
-
 
 #Funcion que sirve para mandar un mensaje a telegram con algun texto que se le pase.
 def mandandoMensaje(texto: str): 
@@ -32,46 +30,18 @@ def mandandoMensaje(texto: str):
     requests.post(url, params=params)
 
 
-#De esta manera borro los avisos que se encuentran en los txta base de datos. 
-def borrarAviso(texto, horaAviso, horaPedidoAviso):
-    global miColeccionAvisos
-    miColeccionAvisos.delete_one({"horaPedidoAviso": horaPedidoAviso, "texto": texto, "horaAviso": horaAviso})
-
 
 #De esta manera borro los recordatorios que se encuentran en la base de datos. 
 def borrarRecordatorio(fecha, nombre):
     global miColeccionRecordatorios 
     miColeccionRecordatorios.delete_one({"fecha": fecha, "nombre": nombre})
-    time.sleep(20)
+    time.sleep(1)
 
 
-def creacionRecordatorios(texto:str, fecha: str, temas: str):
+def creacionRecordatorios(texto:str, fecha, temas: str):
     global miColeccionRecordatorios
     miColeccionRecordatorios.insert_one({
         "fecha": fecha,
         "nombre": texto,
         "temas": temas
     })
-
-
-def creacionAviso(hora: str, texto:str):
-    global miColeccionAvisos
-    hoy = datetime.now()
-    horaA = hoy.hour
-    if horaA < 10:
-        horaA = '0'+ str(hoy.hour)
-    else: 
-        horaA =str(hoy.hour)
-    minutos = hoy.minute
-    if minutos < 10 :
-        minutos ='0'+ str(hoy.minute)
-    else: 
-        minutos = str(hoy.minute)
-    HoraF= horaA + ':' + minutos
-    miColeccionAvisos.insert_one({
-        "horaPedidoAviso": HoraF,
-        "texto": texto,
-        "horaAviso": hora
-    })
-
-
