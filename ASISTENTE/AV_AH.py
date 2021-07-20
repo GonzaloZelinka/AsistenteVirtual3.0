@@ -14,11 +14,12 @@ from pymongo import MongoClient
 
 #CICLO DE ESCUCHA Y FUNCIONAMIENTO
 nombre = 'verónica'
+
 def iniciarAsistente():
     global crearRecordatorio
     global crearTextoRecordatorio
-    global t
     global nombre
+
     listener = sr.Recognizer()
     
     Llamado = False
@@ -28,6 +29,8 @@ def iniciarAsistente():
                 listener.adjust_for_ambient_noise(source, duration=1)
                 voz = listener.listen(source)
                 texto = listener.recognize_google(voz, language="es-ES")
+
+                #Desactivacion del asistente:
                 if Llamado == True: 
                     if (('gracias verónica' in texto.lower()) or ('gracia verónica' in texto.lower()) or ('gracia veronica' in texto.lower()) or ('gracias veronica' in texto.lower()) or ('gracias vero' in texto.lower()) or ('gracia vero'in texto.lower()) or ('gracias'in texto.lower())):
                         Llamado = False
@@ -48,7 +51,7 @@ def iniciarAsistente():
             listener = sr.Recognizer()
 
 
-#Tratar de buscar una forma de killear el hilo, porque cada vez que vuelva a iniciar si no, se crea uno nuevo
+#Funciones que permiten el uso de hilos para evitar cierres inoportunos con la GUI
 def schedule_check(t): 
     ventana.after(1000,finalizo, t)
 
@@ -210,6 +213,7 @@ def buscandoFecha(coleccion, fecha, variacion=1):
             return no_hay
         return buscandoFecha(coleccion, fecha, variacion = variacion*2)
 
+
 #Funcion que permite que el asistente pueda comunicarse
 def hablar(texto):
     audio = pyttsx3.init()
@@ -220,6 +224,7 @@ def hablar(texto):
     audio.say(text=texto)
     audio.runAndWait()
     return 
+
 
 #GUI TKINTER
 ventana = tk.Tk()

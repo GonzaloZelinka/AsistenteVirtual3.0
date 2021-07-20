@@ -6,12 +6,13 @@ import requests
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-# SUPER INTERESANTE; URL PARA Q ME DESCARGUE EL CALENDARIO DE MI FACU DE MOODLE
-#https://frre.cvg.utn.edu.ar/calendar/export_execute.php?userid=10901&authtoken=4858854c87f15d990be1541add85eb58efc32bd7&preset_what=all&preset_time=custom
-#PUEDO IR ACTUALIZANDO EL ARCHIVO AUTOMATICAMENTE; Y ASI VOY HACIENDO AVISOS DE LOS TEMAS
+
+
 load_dotenv()
+MONGO = os.getenv("MONGO")
 TOKEN = os.getenv("TOKEN")
-client = MongoClient("mongodb+srv://admin:43789663@asistentevirtualcluster.yioiu.mongodb.net/test?retryWrites=true&w=majority")
+ID = os.getenv("ID")
+client = MongoClient(MONGO)
 db=client.admin
 
 miDataBase = client.test
@@ -22,7 +23,7 @@ def mandandoMensaje(texto: str):
     print("Entre")
     continuar = True 
     send = texto
-    id = "1723938527"
+    id = ID
     token = TOKEN
     url = "https://api.telegram.org/bot" + token + "/sendMessage"
     params = {
@@ -30,7 +31,6 @@ def mandandoMensaje(texto: str):
         'text' : send
     }
     requests.post(url, params=params)
-
 
 
 #De esta manera borro los recordatorios que se encuentran en la base de datos. 
