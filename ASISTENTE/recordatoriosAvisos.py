@@ -1,14 +1,16 @@
 
 import re
 import time
-from datetime import timedelta, datetime
+from datetime import datetime
 import requests
 from pymongo import MongoClient
- 
+import os
+from dotenv import load_dotenv
 # SUPER INTERESANTE; URL PARA Q ME DESCARGUE EL CALENDARIO DE MI FACU DE MOODLE
 #https://frre.cvg.utn.edu.ar/calendar/export_execute.php?userid=10901&authtoken=4858854c87f15d990be1541add85eb58efc32bd7&preset_what=all&preset_time=custom
 #PUEDO IR ACTUALIZANDO EL ARCHIVO AUTOMATICAMENTE; Y ASI VOY HACIENDO AVISOS DE LOS TEMAS
-
+load_dotenv()
+TOKEN = os.getenv("TOKEN")
 client = MongoClient("mongodb+srv://admin:43789663@asistentevirtualcluster.yioiu.mongodb.net/test?retryWrites=true&w=majority")
 db=client.admin
 
@@ -21,7 +23,7 @@ def mandandoMensaje(texto: str):
     continuar = True 
     send = texto
     id = "1723938527"
-    token = "1784647110:AAH1vLJr5trSw8cDC-IKdeZLl3a20iVVlVo"
+    token = TOKEN
     url = "https://api.telegram.org/bot" + token + "/sendMessage"
     params = {
         'chat_id' : id,
