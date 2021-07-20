@@ -1,0 +1,21 @@
+beautifulsoup4==4.9.3
+certifi==2021.5.30
+chardet==4.0.0
+comtypes==1.1.10
+dnspython==2.1.0
+google==3.0.0
+idna==2.10
+PyAudio @ file:///F:/BotPython2.0/virtualEnvASISTENTE/PyAudio-0.2.11-cp38-cp38-win_amd64.whl
+pymongo==3.11.4
+pypiwin32==223
+python-dateutil==2.8.2
+python-dotenv @ file:///F:/BotPython2.0/virtualEnvASISTENTE/python_dotenv-0.18.0-py2.py3-none-any.whl
+pyttsx3==2.90
+pywin32==301
+requests==2.25.1
+selenium==3.141.0
+six==1.16.0
+soupsieve==2.2.1
+SpeechRecognition==3.8.1
+tk==0.1.0
+urllib3==1.26.5
