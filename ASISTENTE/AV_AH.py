@@ -10,7 +10,8 @@ import webbrowser
 from datetime import datetime, timedelta
 import recordatoriosAvisos
 from pymongo import MongoClient
-
+import os
+from dotenv import load_dotenv
 
 #CICLO DE ESCUCHA Y FUNCIONAMIENTO
 nombre = 'verónica'
@@ -83,7 +84,8 @@ horaParaRecordarRecord = ""
 horaParaRecordar = ""
 MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
 
-client = MongoClient("mongodb+srv://admin:43789663@asistentevirtualcluster.yioiu.mongodb.net/test?retryWrites=true&w=majority")
+MONGO = os.getenv("MONGO")
+client = MongoClient(MONGO)
 db=client.admin
 
 miDataBase = client.test
@@ -114,6 +116,8 @@ def acciones(texto: str):
             hablar("No me haz dicho que quieres que busque. Repítelo, por favor")
             textoTk.insert(tk.END, f'{nombre}: No me haz dicho que quieres que busque. Repítelo, por favor\n')
         return
+        
+        #Proxima funcionalidad reproducir musica en spotify o youtube
     #elif (('reproducir' in texto) or (''))
     elif (('crear recordatorio' in texto) or ('nuevo recordatorio' in texto) or ('crea recordatorio' in texto)): 
         hablar("Ok. Dime en que fecha quieres crear el recordatorio")
