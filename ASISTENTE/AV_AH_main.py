@@ -12,6 +12,7 @@ import recordatoriosAvisos
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+import pywhatkit
 
 #CICLO DE ESCUCHA Y FUNCIONAMIENTO
 nombre = 'verónica'
@@ -61,9 +62,7 @@ def finalizo(t):
     if not t.is_alive(): 
         info_label["text"] = "Asistente Inactivo"
         botonIniciarAsistente["state"] = "normal"
-        print('hilo muerto')
     else:
-        print('hilo vivo')
         schedule_check(t)
 
 def AsistenteIniciado():
@@ -75,15 +74,20 @@ def AsistenteIniciado():
 
 
 #ACCIOONES QUE PERMITE EL AV
+cliente_id = os.getenv("ID_SPOTIFY")
+cliente_secret = os.getenv("ID_SPOSECRET")
+
+
 browser = webdriver
 crearRecordatorio = False
 crearTextoRecordatorio= False
+
 now = datetime.now()
 fechaParaRecordar = datetime.now()
 horaParaRecordarRecord = ""
 horaParaRecordar = ""
 MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
-
+load_dotenv()
 MONGO = os.getenv("MONGO")
 client = MongoClient(MONGO)
 db=client.admin
@@ -99,26 +103,79 @@ def acciones(texto: str):
     global crearTextoRecordatorio
 
     textoTk.insert(tk.END, texto + '\n')
+
+    #Busquedas de google. No se abren paginas ni de wikipedia, ni de youtube. Ya hay otras funciones que hacen eso.
+
     if(('buscar en google' in texto) or ('buscar en el navegador' in texto) or ('busca en google' in texto) or ('busca en navegador' in texto) or ('busca google' in texto) or ('busca navegador' in texto) or ('buscar google' in texto) or ('buscar navegador'in texto)):
         palabras = texto.split()
         contadorPalabras = len(palabras)
         if (contadorPalabras > 3):
             texto = texto.replace("buscar en google", "")
-            resultadosBusquedaG = search(texto , tld="com", lang="es", num=5,start=0, stop=5, pause=3.0 )
-            hablar("Ok, abriendo 5 paginas")
-            textoTk.insert(tk.END, f'{nombre}: Ok, abriendo 5 paginas\n')
+            resultadosBusquedaG = search(texto , lang="es", num=5,start=0, stop=12, pause=1.5 )
+            resultadosBusquedaG = list(resultadosBusquedaG)   
+            hablar("Ok, abriendo paginas")
+            textoTk.insert(tk.END, f'{nombre}: Ok, abriendo paginas\n')
+            num = 0
             for r in resultadosBusquedaG: 
-                if (r == 1): 
-                    webbrowser.open(r, new=1)
-                else:
-                    webbrowser.open_new_tab(r)
+                if num <= 5:
+                    if 'https://es.wikipedia.org/' in r or 'https://www.youtube.com/' in r: 
+                        if num != 0:
+                            num -= 1
+                    else: 
+                        webbrowser.open(r, new=2)
         else:
             hablar("No me haz dicho que quieres que busque. Repítelo, por favor")
             textoTk.insert(tk.END, f'{nombre}: No me haz dicho que quieres que busque. Repítelo, por favor\n')
         return
         
+
         #Proxima funcionalidad reproducir musica en spotify o youtube
-    #elif (('reproducir' in texto) or (''))
+        #En spotify es casi imposible por el momento.
+    elif (('reproducir' in texto) or ('reproduce' in texto)):
+        if "youtube" in texto: 
+            if 'reproducir' in texto:
+                texto = texto.replace('reproducir en youtube', ' ')
+            else:
+                texto = texto.replace('reproduce en youtube', ' ')
+            hablar("Reproduciendo en Youtube" + texto)
+            textoTk.insert(tk.END, f'{nombre}: Reproduciendo en Youtube{texto}\n')
+            pywhatkit.playonyt(texto)
+        if 'cancion' in texto or 'canción' in texto: 
+            if 'reproducir' in texto:
+                if 'cancion' in texto: 
+                    texto = texto.replace('reproducir cancion', ' ')
+                if 'canción' in texto:
+                    texto = texto.replace('reproducir canción', ' ')
+            else:
+                if 'reproduce' in texto:
+                    if 'cancion' in texto: 
+                        texto = texto.replace('reproduce cancion', ' ')
+                    if 'canción' in texto:
+                        texto = texto.replace('reproduce canción', ' ')
+            hablar('Reproduciendo cancion en Youtube:' + texto)
+            textoTk.insert(tk.END, f'{nombre}: Reproduciendo cancion en Youtube {texto}\n')
+            pywhatkit.playonyt(texto)
+
+    #Busquedas en wikipedia, las lee el asistente. 
+
+    elif (('buscar en wikipedia') in texto or ('que es' in texto) or ('que significa' in texto) or ('qué es' in texto) or ('qué significa' in texto)):
+        if 'buscar en wikipedia' in texto: 
+            texto = texto.replace('buscar en wikipedia', ' ')
+        elif 'que es' in texto:
+            texto = texto.replace('que es', ' ')
+        elif 'que significa' in texto:
+            texto = texto.replace('que significa', ' ')
+        elif 'qué es' in texto:
+            texto = texto.replace('qué es', ' ')
+        else:
+            if 'qué significa' in texto:
+                texto = texto.replace('qué significa', ' ')
+        hablar(pywhatkit.info(texto,5))
+        textoTk.insert(tk.END, nombre +':'+ pywhatkit.info(texto,5)+ '\n')
+
+
+    #Lo que permiten que se creen recordatorios y se suban a una base de datos. 
+
     elif (('crear recordatorio' in texto) or ('nuevo recordatorio' in texto) or ('crea recordatorio' in texto)): 
         hablar("Ok. Dime en que fecha quieres crear el recordatorio")
         textoTk.insert(tk.END, f'{nombre}: Ok. Dime en que fecha quieres crear el recordatorio\n')
@@ -204,6 +261,9 @@ def acciones(texto: str):
             textoTk.insert(tk.END, f'{nombre}: El recordatorio mas cercano es el {fecha} con el nombre {texto}\n')
             texto= ''
     texto = ''
+
+#Funcion que permite la busqueda de la fecha mas cercana de recordatorio
+
 def buscandoFecha(coleccion, fecha, variacion=1): 
     try:
         fecha_b = fecha + timedelta(days=variacion)
@@ -219,6 +279,7 @@ def buscandoFecha(coleccion, fecha, variacion=1):
 
 
 #Funcion que permite que el asistente pueda comunicarse
+
 def hablar(texto):
     audio = pyttsx3.init()
     nuevaRate = 210
@@ -231,28 +292,30 @@ def hablar(texto):
 
 
 #GUI TKINTER
-ventana = tk.Tk()
-ventana.title("Asistente Virtual")
-ventana['bg'] = '#232528'
-ventana.geometry("500x300")
-ventana.resizable(0,0)
-ventana.iconbitmap(r'ASISTENTE/veronica.ico')
 
-botonIniciarAsistente = tk.Button(ventana, text= "Iniciar Asistente", command= AsistenteIniciado, padx=30, pady=20)
-botonIniciarAsistente.pack()
-botonIniciarAsistente['bg'] = '#EAF6FF'
-botonIniciarAsistente.config(font=("Arial", 10))
-textoTk = tk.Text(ventana, height= 150, width=150,wrap='word')
-textoTk.pack(after=botonIniciarAsistente, pady=20,padx=20, side=TOP)
-textoTk['bg'] = '#EAF6FF'
-textoTk['fg'] = '#232528'
-textoTk.config(border= 3, font=("Arial", 11),padx=6,pady=4)
-textoTk.bind("<Key>", lambda a: "break")
+if __name__ == '__main__':
+    ventana = tk.Tk()
+    ventana.title("Asistente Virtual")
+    ventana['bg'] = '#232528'
+    ventana.geometry("500x300")
+    ventana.resizable(0,0)
+    ventana.iconbitmap(r'ASISTENTE/veronica.ico')
 
-info_label = tk.Label(text = "Asistente Inactivo")
-info_label['bg'] = '#232528'
-info_label['fg'] = '#EAF6FF'
-info_label.config(font=("Arial", 11))
-info_label.pack(before=botonIniciarAsistente, pady=10)
+    botonIniciarAsistente = tk.Button(ventana, text= "Iniciar Asistente", command= AsistenteIniciado, padx=30, pady=20)
+    botonIniciarAsistente.pack()
+    botonIniciarAsistente['bg'] = '#EAF6FF'
+    botonIniciarAsistente.config(font=("Arial", 10))
+    textoTk = tk.Text(ventana, height= 150, width=150,wrap='word')
+    textoTk.pack(after=botonIniciarAsistente, pady=20,padx=20, side=TOP)
+    textoTk['bg'] = '#EAF6FF'
+    textoTk['fg'] = '#232528'
+    textoTk.config(border= 3, font=("Arial", 11),padx=6,pady=4)
+    textoTk.bind("<Key>", lambda a: "break")
 
-ventana.mainloop()
+    info_label = tk.Label(text = "Asistente Inactivo")
+    info_label['bg'] = '#232528'
+    info_label['fg'] = '#EAF6FF'
+    info_label.config(font=("Arial", 11))
+    info_label.pack(before=botonIniciarAsistente, pady=10)
+
+    ventana.mainloop()

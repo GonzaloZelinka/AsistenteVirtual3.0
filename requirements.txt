@@ -5,12 +5,21 @@ comtypes==1.1.10
 dnspython==2.1.0
 google==3.0.0
 idna==2.10
+MouseInfo==0.1.3
+Pillow==8.3.1
 PyAudio @ file:///F:/BotPython2.0/virtualEnvASISTENTE/PyAudio-0.2.11-cp38-cp38-win_amd64.whl
+PyGetWindow==0.0.9
 pymongo==3.11.4
+PyMsgBox==1.0.9
+pyperclip==1.8.2
 pypiwin32==223
+PyRect==0.1.4
+PyScreeze==0.1.27
 python-dateutil==2.8.2
 python-dotenv @ file:///F:/BotPython2.0/virtualEnvASISTENTE/python_dotenv-0.18.0-py2.py3-none-any.whl
 pyttsx3==2.90
+PyTweening==1.0.3
+pywhatkit==5.0
 pywin32==301
 requests==2.25.1
 selenium==3.141.0
@@ -19,3 +28,4 @@ soupsieve==2.2.1
 SpeechRecognition==3.8.1
 tk==0.1.0
 urllib3==1.26.5
+wikipedia==1.4.0
