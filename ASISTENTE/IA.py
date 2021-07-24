@@ -14,6 +14,13 @@ import os
 from dotenv import load_dotenv
 import pywhatkit
 
+
+import stanza
+import re 
+from unicodedata import normalize
+#stanza.download('es')
+
+
 #CICLO DE ESCUCHA Y FUNCIONAMIENTO
 nombre = 'verónica'
 
@@ -24,7 +31,6 @@ def iniciarAsistente():
 
     listener = sr.Recognizer()
     
-    Llamado = False
     while True:
         try:
             with sr.Microphone() as source: 
@@ -33,16 +39,15 @@ def iniciarAsistente():
                 texto = listener.recognize_google(voz, language="es-ES")
 
                 #Desactivacion del asistente:
-                if (('gracias verónica' in texto.lower()) or ('gracia verónica' in texto.lower()) or ('gracia veronica' in texto.lower()) or ('gracias veronica' in texto.lower()) or ('gracias vero' in texto.lower()) or ('gracia vero'in texto.lower()) or ('gracias'in texto.lower())):
+                if ('gracias verónica' in texto.lower() or 'gracia verónica' in texto.lower() or 'gracia veronica' in texto.lower() or 'gracias veronica' in texto.lower()):
                     crearRecordatorio = False
                     crearTextoRecordatorio = False
                     hablar('De nada')
                     textoTk.insert(tk.END, 'De nada\n')
                     texto = ''
                     break
-                
                 if  texto.lower(): 
-                    acciones(texto.lower())
+                    acciones_IA(texto.lower())
                 texto= ''
         #PARECE Q FUNCIONA
         except UnboundLocalError: 
@@ -51,8 +56,6 @@ def iniciarAsistente():
             continue    
         except sr.UnknownValueError:
             listener = sr.Recognizer()
-        
-
 
 #Funciones que permiten el uso de hilos para evitar cierres inoportunos con la GUI
 def schedule_check(t): 
@@ -74,10 +77,44 @@ def AsistenteIniciado():
     schedule_check(t)
 
 
-#ACCIOONES QUE PERMITE EL AV
-#cliente_id = os.getenv("ID_SPOTIFY")
-#cliente_secret = os.getenv("ID_SPOSECRET")
 
+
+
+nlp = stanza.Pipeline(lang='es')
+#verónica es un amod o un obj
+palabras_exc = ['en', 'el', 'podrias', 'deberias', 'la', 'las', 'los', 'es', 'ahi', 'aquello', 'aquellos', 'aqui', 'tu', 'tus', 'un', 'unas', 'una', 'unos']
+saludo = ['hola', 'buen dia', 'buenos dias', 'buenas tardes']
+texto_prueba = 'verónica como estas podrias buscar en google que es el cancer'
+accion_list = list()
+
+
+def s_tilde(texto):
+    texto = re.sub(r"([^n\u0300-\u036f]|n(?!\u0303(?![\u0300-\u036f])))[\u0300-\u036f]+", r"\1", normalize( "NFD", texto), 0, re.I)
+    texto = normalize( 'NFC', texto)
+    return texto
+
+
+def acciones_IA(texto):
+    global palabras_exc
+    global crearRecordatorio
+    global crearTextoRecordatorio
+
+    if crearRecordatorio == True or crearTextoRecordatorio == True: 
+        return
+    texto = s_tilde(texto)
+    doc = nlp(texto)
+
+    for sent in doc.sentences:
+        for dep in sent.dependencies: 
+            if dep[2].text:
+                accion_list.append(dep[2].text)        
+#probar el tema de que en la lista se pueda ver el buen dia. Con el de accion funciona
+    for sent in doc.sentences:
+        for dep in sent.dependencies:
+            if dep[2].text not in palabras_exc:
+                accion = dep[0].text + ' ' + dep[2].text  
+                acciones(accion=accion, texto=texto, accion_list=accion_list) 
+            #print(accion, texto, accion_list)
 
 browser = webdriver
 crearRecordatorio = False
@@ -96,8 +133,12 @@ db=client.admin
 miDataBase = client.test
 miColeccionRecordatorios = miDataBase.recordatorios
 
+
+
+#acciones_IA(texto_prueba)
+
 #MODULO DE TODOS LOS COMANDOS
-def acciones(texto: str): 
+def acciones(accion, texto, accion_list): 
     global textoTk
     global crearRecordatorio
     global fechaParaRecordar
@@ -106,125 +147,106 @@ def acciones(texto: str):
     textoTk.insert(tk.END, texto + '\n')
 
     #Busquedas de google. No se abren paginas ni de wikipedia, ni de youtube. Ya hay otras funciones que hacen eso.
-
-    if(('buscar en google' in texto) or ('buscar en el navegador' in texto) or ('busca en google' in texto) or ('busca en navegador' in texto) or ('busca google' in texto) or ('busca navegador' in texto) or ('buscar google' in texto) or ('buscar navegador'in texto)):
-        palabras = texto.split()
-        contadorPalabras = len(palabras)
-        if (contadorPalabras > 3):
-            texto = texto.replace("buscar en google", "")
-            resultadosBusquedaG = search(texto , lang="es", num=5,start=0, stop=12, pause=1.5 )
-            resultadosBusquedaG = list(resultadosBusquedaG)   
-            hablar("Ok, abriendo paginas")
-            textoTk.insert(tk.END, f'{nombre}: Ok, abriendo páginas\n')
-            num = 0
-            for r in resultadosBusquedaG: 
-                if num <= 5:
-                    if 'https://es.wikipedia.org/' in r or 'https://www.youtube.com/' in r: 
-                        if num != 0:
-                            num -= 1
-                    else: 
-                        webbrowser.open(r, new=2)
-        else:
-            hablar("No me haz dicho que quieres que busque. Repítelo, por favor")
-            textoTk.insert(tk.END, f'{nombre}: No me haz dicho que quieres que busque. Repítelo, por favor\n')
+    #ANDA
+    if 'dia buen' in accion or 'dias buenos' in accion: 
+        hablar('Buenos días, señor')
         return
-        
-
-        #Proxima funcionalidad reproducir musica en spotify o youtube
-        #En spotify es casi imposible por el momento.
-    elif (('reproducir' in texto) or ('reproduce' in texto)):
-        if "youtube" in texto: 
-            if 'reproducir' in texto:
-                texto = texto.replace('reproducir en youtube', ' ')
-            else:
-                texto = texto.replace('reproduce en youtube', ' ')
-            hablar("Reproduciendo en Youtube" + texto)
-            textoTk.insert(tk.END, f'{nombre}: Reproduciendo en Youtube{texto}\n')
-            pywhatkit.playonyt(texto)
-        if 'cancion' in texto or 'canción' in texto: 
-            if 'reproducir' in texto:
-                if 'cancion' in texto: 
-                    texto = texto.replace('reproducir cancion', ' ')
-                if 'canción' in texto:
-                    texto = texto.replace('reproducir canción', ' ')
-            else:
-                if 'reproduce' in texto:
-                    if 'cancion' in texto: 
-                        texto = texto.replace('reproduce cancion', ' ')
-                    if 'canción' in texto:
-                        texto = texto.replace('reproduce canción', ' ')
-            hablar('Reproduciendo cancion en Youtube:' + texto)
-            textoTk.insert(tk.END, f'{nombre}: Reproduciendo cancion en Youtube {texto}\n')
-            pywhatkit.playonyt(texto)
-
-    #Busquedas en wikipedia, las lee el asistente. 
-    #Arreglar que me aparece el texto en ingles, quizas hay q usar la api de wikipedia. Y arreglar el textotk
-    elif (('buscar en wikipedia') in texto or ('que es' in texto) or ('que significa' in texto) or ('qué es' in texto) or ('qué significa' in texto)):
-        if 'buscar en wikipedia' in texto: 
-            texto = texto.replace('buscar en wikipedia', ' ')
-        elif 'que es' in texto:
-            texto = texto.replace('que es', ' ')
-        elif 'que significa' in texto:
-            texto = texto.replace('que significa', ' ')
-        elif 'qué es' in texto:
-            texto = texto.replace('qué es', ' ')
-        else:
-            if 'qué significa' in texto:
-                texto = texto.replace('qué significa', ' ')
-        hablar(pywhatkit.info(texto,5))
-        textoTk.insert(tk.END, nombre +':'+ pywhatkit.info(texto,5)+ '\n')
-
+    if 'tarde buena' in accion or 'tardes buenos' in accion: 
+        hablar('Buenos tardes, señor')
+        return
+    if 'noche buena' in accion or 'noches buenos' in accion: 
+        hablar('Buenos noches, señor')
+        return
+    elif 'ROOT hola' in accion: 
+        hablar('Hola, señor')
+        return
+    elif 'buscar google' in accion:
+        hablar('Ok, realizando búsqueda')
+        busq_list = accion_list
+        while True:
+            if 'google' in busq_list[0]:
+                busq_list.pop(0)
+                print('Se borro: ', busq_list[0])
+                break
+            else: 
+                print('Se borro: ', busq_list[0])
+                busq_list.pop(0)
+        busqueda = str(busq_list)
+        print('Despues: ',busqueda)
+        resultadosBusquedaG = search(busqueda , lang="es", num=5,start=0, stop=12, pause=1.5 )
+        resultadosBusquedaG = list(resultadosBusquedaG)   
+        hablar("Búsqueda finalizada, abriendo páginas")
+        textoTk.insert(tk.END, f'{nombre}: Ok, abriendo páginas\n')
+        num = 0
+        for r in resultadosBusquedaG: 
+            if num <= 5:
+                if 'https://es.wikipedia.org/' in r or 'https://www.youtube.com/' in r or 'https://listado.mercadolibre.com.ar/' in r or 'https://www.mercadolibre.com.ar/' in r or 'https://www.cotodigital3.com.ar/' in r or 'https://www.manfrey.com.ar/' in r: 
+                    if num != 0:
+                        num -= 1
+                else: 
+                    webbrowser.open(r, new=2)
+        return
+    
+    #ANDA
+    elif 'reproduce youtube' in accion or 'reproducir youtube' in accion:
+        busq_list = accion_list
+        while True:
+            if 'youtube' in busq_list[0]:
+                busq_list.pop(0)
+                print('Se borro: ', busq_list[0])
+                break
+            else: 
+                print('Se borro: ', busq_list[0])
+                busq_list.pop(0)
+        busqueda = str(busq_list)
+        hablar("Ok, abriendo Youtube y Reproduciendo" + busqueda)
+        textoTk.insert(tk.END, f'{nombre}:Ok, abriendo Youtube y Reproduciendo {busqueda}\n')
+        pywhatkit.playonyt(busqueda)
+        return
 
     #Lo que permiten que se creen recordatorios y se suban a una base de datos. 
-
-    elif (('crear recordatorio' in texto) or ('nuevo recordatorio' in texto) or ('crea recordatorio' in texto)): 
+    #PROBAR, APARENTEMENTE NO ANDA
+    elif 'crear recordatorio' in accion:
         hablar("Ok. Dime en que fecha quieres crear el recordatorio")
         textoTk.insert(tk.END, f'{nombre}: Ok. Dime en que fecha quieres crear el recordatorio\n')
         crearRecordatorio = True
         return
-
     elif(crearRecordatorio == True):
         hoy = datetime.today() 
         try:
-            if 'hoy' in texto:
-                hablar(hoy)
-                fechaParaRecordar = hoy
-            else: 
-                lista_fecha = texto.split()
-                for palabra in lista_fecha: 
-                    if palabra in MESES:
-                        texto = texto.replace(palabra, str(MESES.index(palabra) + 1))
-                lista_fecha = texto.split()
-                lista_fecha[1] = 'del'
-                lista_fecha[3] = 'del'
-
-                fechastr=','.join(lista_fecha)
-                fechastr= fechastr.replace(',', ' ')
-                fechaParaRecordar = datetime.strptime(fechastr, '%d del %m del %Y')
-                hablar(fechaParaRecordar)           
+            i = 0
+            for palabra in accion_list: 
+                if palabra in MESES:
+                    accion_list[i] = str(MESES.indes(palabra) + 1)
+            accion_list[1] = 'del'
+            accion_list[3] = 'del'
+            fechastr=','.join(accion_list)
+            fechastr= fechastr.replace(',', ' ')
+            fechaParaRecordar = datetime.strptime(fechastr, '%d del %m del %Y')
+            hablar(fechaParaRecordar)           
             crearTextoRecordatorio = True
             crearRecordatorio = False
             hablar("Ok, ¿Qué quieres que te recuerde?")
             textoTk.insert(tk.END, f'{nombre}: Ok, ¿Qué quieres que te recuerde?\n')
+            return
         except: 
-            hablar("Ingresaste una fecha que no es válida")
-            textoTk.insert(tk.END, f'{nombre}: Ingresaste una fecha que no es válida\n')
+            hablar("Ingresaste una fecha que no es válida, cancelando operación")
+            textoTk.insert(tk.END, f'{nombre}: Ingresaste una fecha que no es válida, cancelando operación\n')
             crearRecordatorio = False
-        return
-
-
+            return      
     elif(crearTextoRecordatorio == True):
         hablar("Ok. Creando Recordatorio")
         textoTk.insert(tk.END, f'{nombre}: Ok. Creando Recordatorio\n')
         recordatoriosAvisos.creacionRecordatorios(texto, fechaParaRecordar, "Sin funcionalidad de temas")
         fechaParaRecordar = ""
         crearTextoRecordatorio = False
-    elif (('recordatorio más cercano' in texto) or ('recordatorio cercano' in texto) or ('cuál es el siguiente recordatorio' in texto) or ('cuando es el siguiente recordatorio' in texto)):
+    
+    #PROBAR COMO TOMA CADA PALABRA CON EL STANZA
+    elif (('recordatorio más cercano' in texto) or ('recordatorio cercano' in texto) or('cuál es el siguiente recordatorio' in texto) or ('cuando es el siguiente recordatorio' in texto)):
         year = datetime.today().year
         mes = datetime.today().month
         dia = datetime.today().day
-        fecha = datetime(year=year, month=mes, day=dia, hour=0, minute=0, second=0, microsecond=0)
-
+        fecha = datetime(year=year, month=mes, day=dia, hour=0, minute=0, second=0,   microsecond=0)
         resultado = buscandoFecha(miColeccionRecordatorios, fecha)
         if resultado == 'No existen recordatorios cercanos' :
             hablar("No existen recordatorios cercanos")
@@ -244,7 +266,6 @@ def acciones(texto: str):
             resultado.pop()
             resultado.pop()
             resultado.pop()
-
             anio = int(resultado[0])
             mes = int(resultado[1])
             dia = int(resultado [2])
@@ -254,12 +275,11 @@ def acciones(texto: str):
                 if c > 5: 
                     texto = texto + ' ' + resultado[c]
                 c += 1
-
             fecha= datetime(anio,mes,dia)
             hablar('El recordatorio mas cercano es el ')
             hablar(fecha)
             hablar('con el nombre' + texto)
-            textoTk.insert(tk.END, f'{nombre}: El recordatorio mas cercano es el {fecha} con el nombre {texto}\n')
+            textoTk.insert(tk.END, f'{nombre}: El recordatorio mas cercano es el {fecha} conel    nombre {texto}\n')
             texto= ''
     texto = ''
 
@@ -279,11 +299,9 @@ def buscandoFecha(coleccion, fecha, variacion=1):
         return buscandoFecha(coleccion, fecha, variacion = variacion*2)
 
 
-#Funcion que permite que el asistente pueda comunicarse
-
 def hablar(texto):
     audio = pyttsx3.init()
-    nuevaRate = 210
+    nuevaRate = 200
     voices = audio.getProperty('voices')
     audio.setProperty('voice', voices[2].id)
     audio.setProperty('rate', nuevaRate)

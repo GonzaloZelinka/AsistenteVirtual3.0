@@ -15,7 +15,7 @@ pyperclip==1.8.2
 pypiwin32==223
 PyRect==0.1.4
 PyScreeze==0.1.27
-python-dateutil==2.8.2
+python-dateutil==2.7.5
 python-dotenv @ file:///F:/BotPython2.0/virtualEnvASISTENTE/python_dotenv-0.18.0-py2.py3-none-any.whl
 pyttsx3==2.90
 PyTweening==1.0.3
