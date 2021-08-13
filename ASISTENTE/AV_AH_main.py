@@ -104,7 +104,7 @@ def acciones(texto: str):
     global crearTextoRecordatorio
 
     textoTk.insert(tk.END, texto + '\n')
-
+    
     #Busquedas de google. No se abren paginas ni de wikipedia, ni de youtube. Ya hay otras funciones que hacen eso.
 
     if(('buscar en google' in texto) or ('buscar en el navegador' in texto) or ('busca en google' in texto) or ('busca en navegador' in texto) or ('busca google' in texto) or ('busca navegador' in texto) or ('buscar google' in texto) or ('buscar navegador'in texto)):

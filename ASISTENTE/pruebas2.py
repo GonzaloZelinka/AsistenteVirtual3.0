@@ -59,18 +59,20 @@ def acciones_IA(texto):
         for sent in doc.sentences:
             for dep in sent.dependencies:
                 if dep[2].text not in palabras_exc:
-                    #print(dep[0].text, dep[2].text) 
+                    print(dep[0].text, dep[2].text) 
                     accion = dep[0].text + ' ' + dep[2].text
                     acciones(accion=accion, texto=texto, accion_list=accion_list) 
 
 browser = webdriver
 
-def busqueda_sIA(texto, accion_list, parar,parar_2, p_busqueda, e_busqueda): 
+def busqueda_sIA(texto, accion_list, parar,parar_2, p_busqueda, e_busqueda, parar_3=1, parar_4=1): 
     i = 0 
     print(accion_list)
     print(texto)
     busqueda = ' '
     llego = False
+    print(e_busqueda)
+
     if e_busqueda not in texto: 
         pos = accion_list.index(p_busqueda)
         accion_list.insert(pos, 'en')
@@ -81,7 +83,7 @@ def busqueda_sIA(texto, accion_list, parar,parar_2, p_busqueda, e_busqueda):
                 if len(accion_list) > (i+1):
                     if accion_list[i+1] != p_busqueda: 
                         busqueda = busqueda + ' ' + accion
-            if accion == parar or accion == parar_2: 
+            if accion == parar or accion == parar_2 or accion == parar_3 or accion == parar_4 or parar_3 == 1 or parar_4 == 1: 
                 if accion_list[i+2] == p_busqueda:
                     print('No comprendi lo que me solicitó, vuelva a intentarlo porfavor')
                     #probar si esto permite reiniciar la escucha por si hubo algun error cuando se definio alguna accion. 
@@ -100,92 +102,28 @@ def busqueda_sIA(texto, accion_list, parar,parar_2, p_busqueda, e_busqueda):
 #Habria que probar
 def acciones_sIA(texto,accion_list): 
     global error
-    global acciones_juntas
-    #FIJARSE COMO TRAER PARAMETROS OPCIONALES
-    if acciones_juntas == True: 
-        busq_list = accion_list
-
-        #FUNCIONA PERFECTO. SIRVE PARA CUANDO ME PIDE VARIAS ACCIONES, tipo buscar un youtube algo y en google a la vez
-        if 'en youtube' in texto or 'youtube' in texto: 
-            i = 0
-            while True: 
-                acciones = accion_list[i]
-                i += 1 
-                if acciones == 'reproduce' or acciones == 'reproducir': 
-                    i = 0 
-                    busq_list.pop(0)
-                    if 'en youtube' not in texto: 
-                        pos = accion_list.index('youtube')
-                        accion_list.insert(pos, 'en')
-                        print(accion_list)
-                    for acciones in busq_list:
-                        if busq_list[i+2] == 'youtube' or acciones == 'youtube':
-                            busq_list.pop(i+2)
-                            busq_list.pop(i+1)
-                            romper = True 
-                            break
-                    if romper == True:
-                        break
-                    else: 
-                        busq_list.pop(0)
-                        i = 0
-            print('Lista final:', busq_list)
-            busq = str(busq_list)
-            print('lo que se va a buscar: ',busq)
-    # NO SIEMPRE TIENE QUE VENIR DOS ACCIONES        
-    else:
-        if 'en youtube' in texto or 'youtube' in texto: 
-            busqueda = busqueda_sIA(texto, accion_list, 'reproduce', 'reproducir', 'youtube', 'en   youtube')
-            print('busqueda yb: ',busqueda)
-            busqueda = ''
-        if 'en google' in texto or 'google' in texto:
-            busqueda = busqueda_sIA(texto,accion_list, 'buscar', 'buscame','google', 'en google')
-            print('busqueda go: ',busqueda)
-            busqueda = ''
-        else: 
-            if busqueda == True: 
-                error = True
-                return 
+    if 'en youtube' in texto or 'youtube' in texto: 
+        busqueda = busqueda_sIA(texto, accion_list, 'reproduce', 'reproducir', 'youtube', 'en youtube','buscar','buscame')
+        print('busqueda yb: ',busqueda)
+        busqueda = ''
+    if 'en google' in texto or 'google' in texto:
+        busqueda = busqueda_sIA(texto,accion_list, 'buscar', 'buscame','google', 'en google')
+        print('busqueda go: ',busqueda)
+        busqueda = ''
+    else: 
+        if busqueda == True: 
+            error = True
+            return 
 
 def acciones(accion, texto, accion_list): 
     global existe_accion
-    global acciones_juntas
+    #global acciones_juntas
     i = 0
     existe_accion = False
     esc = False
-    romper = False
+    #romper = False
     #SIRVE PARA CUANDO VIENE UNA SOLA ACCION DEL TIPO 'buscar en youtube...'
-    if 'reproduce youtube' in accion or 'reproducir youtube' in accion:
-        busq_list = accion_list
-        #ACA COMPRUEBO QUE SEA JUSTAMENTE UNA SOLA ACCION, ya que a veces si son varias se puede obtener el reproduce youtube como token
-        while True:
-            acciones = accion_list[i]
-            i += 1
-            print('VA EN: ',acciones)
-            if acciones == 'reproduce' or acciones == 'reproducir': 
-                print('Entro0')
-                i = 0
-                for acciones in busq_list:
-                    if busq_list[i+2] == 'youtube': 
-                        existe_accion = True
-                        romper = True
-                        break 
-                    if acciones == 'youtube': 
-                        print('Entro1')
-                        acciones_juntas = True
-                        existe_accion = False
-                        romper = True
-                        print(existe_accion)
-                        break
-            if romper == True: 
-                break
-            else: 
-                print('borrando: ',busq_list.pop(0))
-                i = 0
-                #busq_list.pop(i)
-        print(busq_list)
-        if existe_accion == False:
-            return
+    if 'reproduce youtube' in accion or 'reproducir youtube' in accion or 'buscar youtube' in accion or 'buscame youtube' in accion:
         # SI EXISTE BIEN LA ACCION, osea es solo esa y esta bien escrita, hago la busqueda como siempre
         if existe_accion == True: 
             busq_list = accion_list
@@ -202,18 +140,18 @@ def acciones(accion, texto, accion_list):
             pywhatkit.playonyt(busqueda)
             return
     # TODAVIA SIN ARREGLAR
-    if 'buscar google' in accion:
-        for acciones in accion_list:
-            if acciones == 'buscar' or acciones == 'buscame': 
-                if accion_list[i+2] == 'youtube': 
-                    acciones_sIA(texto,accion_list)
-                    esc = True
-                    break
-                else: 
-                    break
-        if esc == True:
-            esc = False
-            return
+    elif 'buscar google' in accion or 'buscame google' in accion:
+        #for acciones in accion_list:
+        #    if acciones == 'buscar' or acciones == 'buscame': 
+        #        if accion_list[i+2] == 'youtube': 
+        #            acciones_sIA(texto,accion_list)
+        #            esc = True
+        #            break
+        #        else: 
+        #            break
+        #if esc == True:
+        #    esc = False
+        #    return
         print('Ok, realizando búsqueda')
         busq_list = accion_list
         while True:
@@ -239,7 +177,7 @@ def acciones(accion, texto, accion_list):
                     webbrowser.open(r, new=2)
         return
 
-acciones_IA('buscar hola soy german en google y reproduce zabatum en youtube')
+acciones_IA('crear recordatorio')
 
 #verónica quiero reproducir hola soy german en youtube // 
 #('verónica', 2, 'amod')
